@@ -1,109 +1,94 @@
-# rspa
+# rspa stage 01
 
-        nvm use 6.6
-        Now using node v6.6.0 (npm v3.10.3)
+# Sass and Autoprefixer
 
-        ~ $ cd github/
-        ~/github $ git clone https://github.com/janusnic/rspa
-        ~/github $ cd rspa/
-        ~/github/rspa $ git init
-        ~/github/rspa $ npm init -y
+## install devdependencies
 
-# package.json:
-
-        {
-         "name": "rspa",
-         "version": "1.0.0",
-         "description": "",
-         "main": "index.js",
-         "scripts": {
-           "test": "echo \"Error: no test specified\" && exit 1"
-         },
-         "repository": {
-           "type": "git",
-           "url": "git+https://github.com/janusnic/rspa.git"
-         },
-         "keywords": [],
-         "author": "",
-         "license": "ISC",
-         "bugs": {
-           "url": "https://github.com/janusnic/rspa/issues"
-         },
-         "homepage": "https://github.com/janusnic/rspa#readme"
-        }
-# install gulp and babel
-
-         npm install -g gulp-cli
-         npm install --save-dev gulp babel-core babel-preset-es2015
-
-         .babelrc:
-        {
-          "presets": ["es2015"]
-        }
-
-# install devdependencies
-
-    npm install --save-dev babel-plugin-transform-class-properties babel-preset-react babelify browserify gulp-util vinyl-source-stream
-
-    babel-plugin-transform-class-properties
-    babel-preset-react
-    babelify
-    browserify
-    gulp-util
-    history
+    npm install --save-dev gulp-autoprefixer gulp-filter gulp-plumber gulp-sass gulp-sourcemaps gulp-notify
 
 
-# install dependencies
+## Compile Sass to CSS
 
-     npm install --save react react-dom react-router
+## gulpfile.babel.js
 
-     react
-     react-dom
-     react-router
+    import autoprefixer from  'gulp-autoprefixer';
+    import filter from  'gulp-filter';
+    import plumber from 'gulp-plumber';
+    import sass from 'gulp-sass';
+    import sourcemaps from 'gulp-sourcemaps';
+    import notify from 'gulp-notify';
 
-# gulpfile.js
-        //Include required modules
-        var gulp = require('gulp');
-        var browserify = require('browserify');
-        var babelify = require('babelify');
-        var source = require('vinyl-source-stream');
+    var onError = function(err) {
+      notify.onError({
+        title:    "Error",
+        message:  "<%= error %>",
+      })(err);
+      this.emit('end');
+    };
 
-        gulp.task('build', function () {
-            return browserify({entries: './src/client/app.jsx', extensions: ['.jsx'], debug: true})
-                .transform('babelify', {presets: ['es2015', 'react']})
-                .bundle()
-                .pipe(source('bundle.js'))
-                .pipe(gulp.dest('dist'));
+    let plumberOptions = {
+      errorHandler: onError,
+    };
+
+    // Compile Sass to CSS
+    gulp.task('sass', () => {
+      let autoprefixerOptions = {
+        browsers: ['last 2 versions'],
+      };
+
+      let filterOptions = '**/*.css';
+
+      let sassOptions = {
+        includePaths: [
+
+        ]
+      };
+
+      return gulp.src('src/client/sass/**/*.scss')
+        .pipe(plumber(plumberOptions))
+        .pipe(sourcemaps.init())
+        .pipe(sass(sassOptions))
+        .pipe(autoprefixer(autoprefixerOptions))
+        .pipe(sourcemaps.write('./'))
+        .pipe(gulp.dest('dist/css'))
+        .pipe(filter(filterOptions));
+
+    });
+
+    gulp.task('watch', ['build','sass'], () => {
+        gulp.watch('./src/client/**/*.js,*.jsx', ['build']);
+        gulp.watch('src/client/sass/**/*.scss', ['sass']);
+    });    
+
+# components/home.js
+
+        import React from 'react';
+
+        const Home = React.createClass({
+          render: function() {
+            return (
+              <div className="home-page">
+                <h1>SPA React Home Page</h1>
+                <p>
+                Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                </p>
+              </div>
+            );
+          }
         });
 
-        gulp.task('watch', ['build'], function () {
-            gulp.watch('./src/client/**/*.jsx', ['build']);
-        });
+        export default Home;
 
-        gulp.task('default', ['watch']);
-
-# src/client/app.jsx
+# app.js
 
         import React from 'react';
         import ReactDOM from 'react-dom';
-        import HelloWorld from './hello';
+        import Home from './components/home';
 
         ReactDOM.render(
-            <HelloWorld phrase="ES6"/>,
-            document.body
+            <Home />,
+            document.getElementById('root')
         );
-
-# src/client/hello.jsx
-
-        import React from 'react';
-
-        class HelloWorld extends React.Component {
-            render() {
-                return <h1>Hello from {this.props.phrase}!</h1>;
-            }
-        }
-
-        export default HelloWorld;
 
 
 # index.html
@@ -115,105 +100,277 @@
             <title>ReactJS and ES6</title>
         </head>
         <body>
+        <div id="root"></div>
         <script src="dist/bundle.js"></script>
         </body>
         </html>
 
+## install devdependencies
 
-gulp
+        npm install --save-dev webpack webpack-stream gulp-nodemon
 
-# Copy static files from html folder to build folder
+# webpack.config.js
 
-        //Include required modules
-        var gulp = require('gulp');
-        var browserify = require('browserify');
-        var babelify = require('babelify');
-        var source = require('vinyl-source-stream');
+        var path = require('path');
 
-        //Convert ES6 ode in all js files in src/js folder and copy to
-        //build folder as bundle.js
-        gulp.task('build', function () {
-            return browserify({entries: './src/client/app.js', extensions: [".js", ".jsx"], debug: true})
-                .transform('babelify', {presets: ['es2015', 'react']})
-                .bundle()
-                .pipe(source('bundle.js'))
-                .pipe(gulp.dest('dist/js'));
-        });
+        module.exports = {
+            entry: "./src/client/app.js",
+            output: {
+                filename: "dist/js/bundle.js",
+                sourceMapFilename: "dist/js/bundle.map"
+            },
+            devtool: '#source-map',
+            module: {
+                loaders: [
+                    {
+                        loader: 'babel',
+                        exclude: /node_modules/
+                    }
+                ]
+            }
+        }
 
-        gulp.task('watch', ['build'], function () {
-            gulp.watch('./src/client/**/*.js',*.jsx', ['build']);
-        });
+# package.json
 
-        //Copy static files from html folder to build folder
-        gulp.task("copyStaticFiles", function(){
-            return gulp.src("./src/client/*.html")
-            .pipe(gulp.dest("./dist"));
-        });
+        "devDependencies": {
+          "babel-cli": "^6.16.0",
+          "babel-core": "^6.14.0",
+          "babel-loader": "^6.2.5",
+          "babel-plugin-transform-class-properties": "^6.11.5",
+          "babel-preset-es2015": "^6.14.0",
+          "babel-preset-react": "^6.11.1",
+          "babelify": "^7.3.0",
+          "browserify": "^13.1.0",
+          "del": "^2.2.2",
+          "gulp": "^3.9.1",
+          "gulp-autoprefixer": "^3.1.1",
+          "gulp-filter": "^4.0.0",
+          "gulp-nodemon": "^2.2.1",
+          "gulp-notify": "^2.2.0",
+          "gulp-plumber": "^1.1.0",
+          "gulp-sass": "^2.3.2",
+          "gulp-sourcemaps": "^1.6.0",
+          "gulp-util": "^3.0.7",
+          "vinyl-source-stream": "^1.1.0",
+          "webpack": "^1.13.2",
+          "webpack-stream": "^3.2.0"
+        },
+        "dependencies": {
+          "express": "^4.14.0",
+          "react": "^15.3.2",
+          "react-dom": "^15.3.2",
+          "react-router": "^2.8.1"
+        }
 
-        //Default task. This will be run when no task is passed in arguments to gulp
-        gulp.task('default', ["copyStaticFiles",'watch']);
+## gulpfile.babel.js
 
-# gulpfile.js --> gulpfile.babel.js
-
-        //Include required modules
+        // Include required modules
         import gulp from 'gulp';
         import gutil from 'gulp-util';
         import browserify from 'browserify';
         import babelify from 'babelify';
         import source from 'vinyl-source-stream';
 
-        gulp.task('build', () => {
-            return browserify({entries: './src/client/app.js', extensions: [".js", ".jsx"], debug: true})
-                .transform('babelify', {
-                    presets: ['es2015', 'react'],
-                    plugins: ['transform-class-properties']
-                })
-                .bundle()
-                .on('error', function(err){
-                    gutil.log(gutil.colors.red.bold('[browserify error]'));
-                    gutil.log(err.message);
-                    this.emit('end');
-                })
-                .pipe(source('bundle.js'))
-                .pipe(gulp.dest('dist/js'));
+        import webpack from 'webpack-stream';
+        import webpackConfig from './webpack.config.js';
+        import nodemon from 'gulp-nodemon';
+        import path from 'path';
+
+        import autoprefixer from  'gulp-autoprefixer';
+        import filter from  'gulp-filter';
+        import plumber from 'gulp-plumber';
+        import sass from 'gulp-sass';
+        import sourcemaps from 'gulp-sourcemaps';
+        import notify from 'gulp-notify';
+
+        var onError = function(err) {
+          notify.onError({
+            title:    "Error",
+            message:  "<%= error %>",
+          })(err);
+          this.emit('end');
+        };
+
+        let plumberOptions = {
+          errorHandler: onError,
+        };
+
+        // Compile Sass to CSS
+        gulp.task('sass', () => {
+          let autoprefixerOptions = {
+            browsers: ['last 2 versions'],
+          };
+
+          let filterOptions = '**/*.css';
+
+          let sassOptions = {
+            includePaths: [
+
+            ]
+          };
+
+          return gulp.src('src/client/sass/**/*.scss')
+            .pipe(plumber(plumberOptions))
+            .pipe(sourcemaps.init())
+            .pipe(sass(sassOptions))
+            .pipe(autoprefixer(autoprefixerOptions))
+            .pipe(sourcemaps.write('./'))
+            .pipe(gulp.dest('dist/css'))
+            .pipe(filter(filterOptions));
         });
 
-        gulp.task('watch', ['build'], () => {
-            gulp.watch('./src/client/**/*.js,*.jsx', ['build']);
+        /**
+         * Build (Webpack)
+         */
+
+        gulp.task('clean:build', function() {
+            del('./dist/js/*')
+        })
+
+        gulp.task('build', ['clean:build'], function() {
+          return gulp.src('./src/client/app.js')
+            .pipe(webpack(webpackConfig))
+            .on('error', function handleError() {
+              this.emit('end'); // Recover from errors
+            })
+            .pipe(gulp.dest('dist/js'));
         });
 
-        //Copy static files from html folder to build folder
-        gulp.task('copyStaticFiles', () => {
-            return gulp.src("./src/client/*.html")
-            .pipe(gulp.dest("./dist"));
+        gulp.task('watch:build', ['build','sass'], () => {
+          gulp.watch('./src/client/**/*.js,*.jsx', ['build']);
+          gulp.watch('src/client/sass/**/*.scss', ['sass']);
         });
 
-        gulp.task('default', ["copyStaticFiles",'watch']);
+        /**
+         * Node Server (Express)
+         */
 
+        gulp.task('serve:node', function(done) {
+          var babelPath = path.join(__dirname, 'node_modules/.bin/babel-node');
+          nodemon({
+            exec: babelPath + ' ./server.js',
+            watch: ['server.js'],
+            ext: 'js html'
+          });
+        });
 
-warning.js:36Warning: render(): Rendering components directly into document.body is discouraged, since its children are often manipulated by third-party scripts and browser extensions. This may lead to subtle reconciliation issues. Try rendering into a container element created for your app.printWarning @ warning.js:36
+        /**
+         * Main tasks
+         */
 
-# index.html
+        gulp.task('serve', ['serve:node']);
+        gulp.task('watch', ['build', 'watch:build']);
+        gulp.task('default', ['serve']);
 
-        <!DOCTYPE html>
-        <html>
-        <head lang="en">
-            <meta charset="UTF-8">
-            <title>ReactJS and ES6</title>
-        </head>
-        <body>
-            <h1>Hello World</h1>
-            <div id="hello"></div>
-        <script src="js/bundle.js"></script>
-        </body>
-        </html>
+# router.js
+
+        import React from 'react';
+        import { Router, Route, browserHistory, IndexRoute } from 'react-router';
+
+        // Layouts
+        import MainLayout from './components/main-layout';
+
+        // Pages
+        import Home from './components/home';
+
+        export default (
+          <Router history={browserHistory}>
+            <Route component={MainLayout}>
+              <Route path="/" component={Home} />
+            </Route>
+          </Router>
+        );
 
 # app.js
+
         import React from 'react';
         import ReactDOM from 'react-dom';
-        import HelloWorld from './hello';
+        // Notice that we've organized all of our routes into a separate file.
+        import Router from './router';
 
-        ReactDOM.render(
-            <HelloWorld phrase="ES6"/>,
-            document.getElementById('hello')
-        );
+        ReactDOM.render(Router, document.getElementById('root'));
+
+# components/main-layout.js
+
+        import React from 'react';
+        import { Link } from 'react-router';
+
+        const MainLayout = React.createClass({
+          render: function() {
+            return (
+              <div className="app">
+                <header className="primary-header"></header>
+                <aside className="primary-aside">
+                  <ul>
+                    <li><Link to="/" activeClassName="active">Home</Link></li>
+
+                  </ul>
+                </aside>
+                <main>
+                  {this.props.children}
+                </main>
+              </div>
+            );
+          }
+        });
+
+        export default MainLayout;
+
+# server.js
+
+        /**
+         * This is just a dummy server to facilidate our React SPA examples.
+         * For a more professional setup of Express, see...
+         * http://expressjs.com/en/starter/generator.html
+         */
+
+        import express from 'express';
+        import path from 'path';
+        const app = express();
+
+
+        /**
+         * Anything in public can be accessed statically without
+         * this express router getting involved
+         */
+
+        app.use(express.static(path.join(__dirname, 'dist'), {
+          dotfiles: 'ignore',
+          index: false
+        }));
+
+
+        /**
+         * Always serve the same HTML file for all requests
+         */
+
+        app.get('*', function(req, res, next) {
+          console.log('Request: [GET]', req.originalUrl)
+          res.sendFile(path.resolve(__dirname, 'dist/index.html'));
+        });
+
+
+        /**
+         * Error Handling
+         */
+
+        app.use(function(req, res, next) {
+          console.log('404')
+          let err = new Error('Not Found');
+          err.status = 404;
+          next(err);
+        });
+
+        app.use(function(err, req, res, next) {
+          res.sendStatus(err.status || 500);
+        });
+
+
+        /**
+         * Start Server
+         */
+
+        const port = 3000;
+        app.listen(port);
+
+        console.log('Visit: localhost:' + port);

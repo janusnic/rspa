@@ -1,0 +1,21 @@
+import React from 'react';
+import { Router, Route, browserHistory, IndexRoute } from 'react-router';
+
+// Layouts
+import MainLayout from './components/main-layout';
+//import SearchLayout from './components/search-layout';
+
+// Pages
+import Home from './components/home';
+//import UserList from './components/user-list';
+//import UserProfile from './components/user-profile';
+//import WidgetList from './components/widget-list';
+
+export default (
+  <Router history={browserHistory}>
+    <Route component={MainLayout}>
+      <Route path="/" component={Home} />
+
+    </Route>
+  </Router>
+);

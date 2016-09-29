@@ -1,8 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import HelloWorld from './hello';
+// Notice that we've organized all of our routes into a separate file.
+import Router from './router';
 
-ReactDOM.render(
-    <HelloWorld phrase="ES6"/>,
-    document.getElementById('hello')
-);
+ReactDOM.render(Router, document.getElementById('root'));
